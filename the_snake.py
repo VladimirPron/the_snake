@@ -47,6 +47,12 @@ class GameObject:
             SCREEN_HEIGHT // 2
         )
 
+    def draw(self):
+        """Abstract method, which will be changed in next classes"""
+        raise NotImplementedError(
+            'Check "draw" method for GameObjects'
+        )
+
 
 class Apple(GameObject):
     """This class describes apples. The snake must eat apples to grow."""
