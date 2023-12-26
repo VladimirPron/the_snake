@@ -31,6 +31,11 @@ LEFT: tuple = (-1, 0)
 RIGHT: tuple = (1, 0)
 MOVE_LIST: list = [UP, DOWN, LEFT, RIGHT]
 
+# Game's settings
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), 0, 32)
+pygame.display.set_caption('Змейка')
+clock = pygame.time.Clock()
+
 
 class GameObject:
     """Parent class for game's objects."""
@@ -231,9 +236,5 @@ def main():
 
 
 if __name__ == '__main__':
-    # Game's settings
-    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), 0, 32)
-    pygame.display.set_caption('Змейка')
-    clock = pygame.time.Clock()
 
     main()
