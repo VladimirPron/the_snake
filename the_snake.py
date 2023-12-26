@@ -1,5 +1,7 @@
 from random import choice, randint
+from typing import Any, Optional, Union
 import pygame
+import sys
 
 # Initialisation of PyGame.
 pygame.init()
@@ -8,46 +10,40 @@ pygame.init()
 SCREEN_WIDTH: int = 640
 SCREEN_HEIGHT: int = 480
 GRID_SIZE: int = 20
-GRID_WIDTH = SCREEN_WIDTH // GRID_SIZE
-GRID_HEIGHT = SCREEN_HEIGHT // GRID_SIZE
+GRID_WIDTH: int = SCREEN_WIDTH // GRID_SIZE
+GRID_HEIGHT: int = SCREEN_HEIGHT // GRID_SIZE
 
 # Main colors for game
-COLOR_RED = (255, 0, 0)
-COLOR_BLACK = (0, 0, 0)
-COLOR_GREEN = (0, 255, 0)
-COLOR_LIGHT_BLUE = (93, 216, 228)
-# COLOR_RAND = (randint(0, 255), randint(0, 255), randint(0, 255))
+COLOR_RED: tuple = (255, 0, 0)
+COLOR_BLACK: tuple = (0, 0, 0)
+COLOR_GREEN: tuple = (0, 255, 0)
+COLOR_LIGHT_BLUE: tuple = (93, 216, 228)
 
-BOARD_BACKGROUND_COLOR = COLOR_BLACK
+BOARD_BACKGROUND_COLOR: tuple = COLOR_BLACK
 
 # Snake's speed
 SPEED: int = 2
 
 # Moving directions
-UP = (0, -1)
-DOWN = (0, 1)
-LEFT = (-1, 0)
-RIGHT = (1, 0)
-MOVE_LIST = (UP, DOWN, LEFT, RIGHT)
-
-# Game's settings
-screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), 0, 32)
-pygame.display.set_caption('Змейка')
-clock = pygame.time.Clock()
+UP: tuple = (0, -1)
+DOWN: tuple = (0, 1)
+LEFT: tuple = (-1, 0)
+RIGHT: tuple = (1, 0)
+MOVE_LIST: list = [UP, DOWN, LEFT, RIGHT]
 
 
 class GameObject:
     """Parent class for game's objects."""
 
-    body_color = None
+    body_color: Optional[tuple] = None
 
     def __init__(self) -> None:
-        self.position = (
+        self.position: Union[list, tuple] = (
             SCREEN_WIDTH // 2,
             SCREEN_HEIGHT // 2
         )
 
-    def draw(self):
+    def draw(self) -> None:
         """Abstract method, which will be changed in next classes"""
         raise NotImplementedError(
             'Check "draw" method for GameObjects'
@@ -57,12 +53,12 @@ class GameObject:
 class Apple(GameObject):
     """This class describes apples. The snake must eat apples to grow."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.body_color = COLOR_RED
         self.randomize_position()
 
-    def randomize_position(self):
+    def randomize_position(self) -> None:
         """Method to generate Apple's position on the surface."""
         self.position = (
             randint(0, GRID_WIDTH - 1) * GRID_SIZE,
@@ -82,25 +78,25 @@ class Apple(GameObject):
 class Snake(GameObject):
     """Class Snake describes snake."""
 
-    length = 1
-    positions = None
-    direction = None
-    next_direction = None
-    last = None
+    length: int = 1
+    positions: Union[list[tuple[int, int]], Any] = None
+    direction: Union[tuple, Any] = None
+    next_direction: Optional[tuple[tuple, tuple]] = None
+    last: Union[tuple, Any] = None
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.body_color = COLOR_GREEN
         self.direction = choice(MOVE_LIST)
         self.positions = [self.position]
 
-    def update_direction(self):
+    def update_direction(self) -> None:
         """This Method updates move direction after hitting the button."""
         if self.next_direction:
             self.direction = self.next_direction
             self.next_direction = None
 
-    def move(self):
+    def move(self) -> Any:
         """Method to move a snake."""
         new_position = (
             self.positions[0][0] + self.direction[0] * GRID_SIZE,
@@ -133,11 +129,11 @@ class Snake(GameObject):
             )
             pygame.draw.rect(surface, BOARD_BACKGROUND_COLOR, last_rect)
 
-    def get_head_position(self):
+    def get_head_position(self) -> tuple[int, int]:
         """The method considering coordinates of the head of a snake."""
         return self.positions[0][0], self.positions[0][1]
 
-    def reset(self, surface):
+    def reset(self, surface) -> None:
         """Method to reset game to default."""
         for each in self.positions:
             rect = pygame.Rect(
@@ -153,26 +149,36 @@ class Snake(GameObject):
         self.last = None
 
 
-def handle_keys(game_object):
+def handle_keys(game_object) -> None:
     """Function of processing of actions of the user.
 
     This method excludes the movement of a snake in itself.
     """
+    key_builds: dict = {
+        (pygame.K_UP, RIGHT): UP,
+        (pygame.K_UP, LEFT): UP,
+        (pygame.K_RIGHT, UP): RIGHT,
+        (pygame.K_RIGHT, DOWN): RIGHT,
+        (pygame.K_DOWN, LEFT): DOWN,
+        (pygame.K_DOWN, RIGHT): DOWN,
+        (pygame.K_LEFT, UP): LEFT,
+        (pygame.K_LEFT, DOWN): LEFT
+    }
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
+            sys.exit()
         elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_UP and game_object.direction != DOWN:
-                game_object.next_direction = UP
-            elif event.key == pygame.K_DOWN and game_object.direction != UP:
-                game_object.next_direction = DOWN
-            elif event.key == pygame.K_LEFT and game_object.direction != RIGHT:
-                game_object.next_direction = LEFT
-            elif event.key == pygame.K_RIGHT and game_object.direction != LEFT:
-                game_object.next_direction = RIGHT
+            if (event.key, game_object.direction) in key_builds:
+                game_object.next_direction = key_builds[
+                    (event.key, game_object.direction)
+                ]
+            if event.key == pygame.K_ESCAPE:
+                pygame.quit()
+                sys.exit()
 
 
-def new_apple(snake):
+def new_apple(snake) -> Apple:
     """Function to create new apples."""
     while True:
         apple = Apple()
@@ -181,9 +187,10 @@ def new_apple(snake):
     return apple
 
 
-def infinite_way(snake):
+def infinite_way(snake) -> Snake:
     """This function allows travel throw display's borders."""
-    head_pos_x, head_pos_y = snake.get_head_position()
+    head_pos_x: int = snake.get_head_position()[0]
+    head_pos_y: int = snake.get_head_position()[1]
     if head_pos_x >= SCREEN_WIDTH:
         head_pos_x = 0
     elif head_pos_x < 0:
@@ -224,4 +231,9 @@ def main():
 
 
 if __name__ == '__main__':
+    # Game's settings
+    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), 0, 32)
+    pygame.display.set_caption('Змейка')
+    clock = pygame.time.Clock()
+
     main()
