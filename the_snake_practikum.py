@@ -1,6 +1,5 @@
 from random import choice, randint
 from typing import Any, Optional, Union
-from pygame import Surface
 import pygame
 import sys
 
@@ -18,12 +17,9 @@ GRID_HEIGHT: int = SCREEN_HEIGHT // GRID_SIZE
 COLOR_RED: tuple[int, int, int] = (255, 0, 0)
 COLOR_BLACK: tuple[int, int, int] = (0, 0, 0)
 COLOR_GREEN: tuple[int, int, int] = (0, 255, 0)
-COLOR_GREEN_HEAD: tuple[int, int, int] = (59, 108, 9)
 COLOR_LIGHT_BLUE: tuple[int, int, int] = (93, 216, 228)
-COLOR_LIGHT_BLUE_HEAD: tuple[int, int, int] = (96, 97, 114)
 COLOR_BROWN: tuple[int, int, int] = (107, 78, 58)
 COLOR_BLUE: tuple[int, int, int] = (66, 143, 220)
-COLOR_JUNK: tuple[int, int, int] = (208, 232, 30)
 
 BOARD_BACKGROUND_COLOR: tuple = COLOR_BLACK
 
@@ -38,15 +34,15 @@ RIGHT: tuple = (1, 0)
 MOVE_LIST: list = [UP, DOWN, LEFT, RIGHT]
 
 # Game's settings
-screen: Surface = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), 0, 32)
-pygame.display.set_caption('The Snake')
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), 0, 32)
+pygame.display.set_caption('Змейка')
 clock = pygame.time.Clock()
 
 
 class GameObject:
     """Parent class for game's objects."""
 
-    body_color: Union[tuple[int, int, int], None] = None
+    body_color: Optional[tuple] = None
 
     def __init__(self) -> None:
         self.position: Union[list, tuple] = (
@@ -66,17 +62,15 @@ class Portal(GameObject):
 
     posp: list = []
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.body_color = COLOR_BLUE
         self.positions = self.pos_portal()
 
     def pos_portal(self) -> list:
         """Portal coordinates."""
-        self.posp.append((randint(1, 10) * GRID_SIZE,
-                          (randint(1, 10) * GRID_SIZE)))
-        self.posp.append((randint(20, 30) * GRID_SIZE,
-                          (randint(20, 22) * GRID_SIZE)))
+        self.posp.append((80, 40))
+        self.posp.append((540, 420))
         return self.posp
 
     def draw(self, surface):
@@ -93,7 +87,7 @@ class Wall(GameObject):
 
     post: list = []
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.body_color = COLOR_BROWN
         self.positions = self.pos_wall()
@@ -130,7 +124,7 @@ class Wall(GameObject):
 class Apple(GameObject):
     """This class describes apples. The snake must eat apples to grow."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.body_color = COLOR_RED
         self.randomize_position()
@@ -152,32 +146,6 @@ class Apple(GameObject):
         pygame.draw.rect(surface, COLOR_LIGHT_BLUE, rectangle, 1)
 
 
-class Junk(GameObject):
-    """This Class describes Junk. If snake will eat any Junk,
-    her lenght will be cutted by 1 segment.
-    """
-
-    def __init__(self):
-        super().__init__()
-        self.body_color = COLOR_JUNK
-        self.randomize_position()
-
-    def randomize_position(self) -> None:
-        """Method to generate Junk's position on the surface."""
-        self.position = (
-            randint(0, GRID_WIDTH - 1) * GRID_SIZE,
-            randint(0, GRID_HEIGHT - 1) * GRID_SIZE
-        )
-
-    def draw(self, surface):
-        """Method to draw apples on the surface."""
-        junk = pygame.Rect(
-            (self.position[0], self.position[1]),
-            (GRID_SIZE, GRID_SIZE)
-        )
-        pygame.draw.rect(surface, self.body_color, junk)
-
-
 class Snake(GameObject):
     """Class Snake describes snake."""
 
@@ -187,7 +155,7 @@ class Snake(GameObject):
     next_direction: Optional[tuple[tuple, tuple]] = None
     last: Union[tuple, Any] = None
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.body_color = COLOR_GREEN
         self.direction = choice(MOVE_LIST)
@@ -211,18 +179,18 @@ class Snake(GameObject):
 
     def draw(self, surface):
         """Method to draw a snake."""
-        # Drawing of snake's head.
-        head = self.positions[0]
-        head_rect = pygame.Rect((head[0], head[1]), (GRID_SIZE, GRID_SIZE))
-        pygame.draw.rect(surface, COLOR_GREEN_HEAD, head_rect)
-        pygame.draw.rect(surface, COLOR_LIGHT_BLUE_HEAD, head_rect, 1)
-
-        for position in self.positions[1:]:
+        for position in self.positions[: -1]:
             rect = (
                 pygame.Rect((position[0], position[1]), (GRID_SIZE, GRID_SIZE))
             )
             pygame.draw.rect(surface, self.body_color, rect)
             pygame.draw.rect(surface, COLOR_LIGHT_BLUE, rect, 1)
+
+        # Drawing of snake's head.
+        head = self.positions[0]
+        head_rect = pygame.Rect((head[0], head[1]), (GRID_SIZE, GRID_SIZE))
+        pygame.draw.rect(surface, self.body_color, head_rect)
+        pygame.draw.rect(surface, COLOR_LIGHT_BLUE, head_rect, 1)
 
         # Erasing of the last segment.
         if self.last:
@@ -252,7 +220,7 @@ class Snake(GameObject):
         self.last = None
 
 
-def handle_keys(game_object: Snake) -> None:
+def handle_keys(game_object) -> None:
     """Function of processing of actions of the user.
 
     This method excludes the movement of a snake in itself.
@@ -281,7 +249,7 @@ def handle_keys(game_object: Snake) -> None:
                 sys.exit()
 
 
-def new_apple(snake: Snake, wall: Wall, portal: Portal) -> Apple:
+def new_apple(snake, wall, portal) -> Apple:
     """Function to create new apples."""
     while True:
         apple = Apple()
@@ -292,20 +260,8 @@ def new_apple(snake: Snake, wall: Wall, portal: Portal) -> Apple:
     return apple
 
 
-def new_junk(snake: Snake, wall: Wall, portal: Portal, apple: Apple) -> Junk:
-    """Function to create new junk."""
-    while True:
-        junk = Junk()
-        if (junk.position not in snake.positions) and (
-            junk.position not in wall.positions) and (
-                junk.position not in portal.positions) and (
-                    junk.position not in apple.position):
-            break
-    return junk
-
-
-def infinite_way(snake: Snake, portal: Portal) -> Snake:
-    """This function allows travel throw display's borders and portals."""
+def infinite_way(snake, portal) -> Snake:
+    """This function allows travel throw display's borders."""
     head_pos_x: int = snake.get_head_position()[0]
     head_pos_y: int = snake.get_head_position()[1]
     portal_1_pos_x: int = portal.positions[0][0]
@@ -339,7 +295,6 @@ def main():
     wall = Wall()
     portal = Portal()
     apple = new_apple(snake, wall, portal)
-    junk = new_junk(snake, wall, portal, apple)
     speed = SPEED
     while True:
         clock.tick(speed)
@@ -349,7 +304,6 @@ def main():
         snake.move()
         snake = infinite_way(snake, portal)
         apple.draw(screen)
-        junk.draw(screen)
         snake.draw(screen)
         wall.draw(screen)
         portal.draw(screen)
@@ -357,23 +311,7 @@ def main():
             snake.positions.append(snake.last)
             snake.last = None
             apple = new_apple(snake, wall, portal)
-            snake.length += 1
             speed += 0.5
-
-        if snake.positions[0] == junk.position:
-            snake.length -= 1
-            if snake.length < 1:
-                pygame.quit()
-                sys.exit()
-            rect = pygame.Rect(
-                (snake.positions[-1][0], snake.positions[-1][1]),
-                (GRID_SIZE, GRID_SIZE)
-            )
-            pygame.draw.rect(screen, COLOR_BLACK, rect)
-            snake.positions.pop(-1)
-            snake.last = snake.positions[-1]
-            speed -= 0.5
-            junk = new_junk(snake, wall, portal, apple)
 
         if snake.positions[0] in snake.positions[1:]:
             snake.reset(screen)

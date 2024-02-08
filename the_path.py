@@ -8,7 +8,7 @@ import sys
 pygame.init()
 
 # Constants for dimensions.
-SCREEN_WIDTH: int = 640
+SCREEN_WIDTH: int = 480
 SCREEN_HEIGHT: int = 480
 GRID_SIZE: int = 20
 GRID_WIDTH: int = SCREEN_WIDTH // GRID_SIZE
@@ -47,6 +47,7 @@ class GameObject:
     """Parent class for game's objects."""
 
     body_color: Union[tuple[int, int, int], None] = None
+    direction: tuple = RIGHT
 
     def __init__(self) -> None:
         self.position: Union[list, tuple] = (
@@ -61,7 +62,7 @@ class GameObject:
         )
 
 
-class Portal(GameObject):
+class WallFirst(GameObject):
     """Portals on the game-field."""
 
     posp: list = []
@@ -73,10 +74,9 @@ class Portal(GameObject):
 
     def pos_portal(self) -> list:
         """Portal coordinates."""
-        self.posp.append((randint(1, 10) * GRID_SIZE,
-                          (randint(1, 10) * GRID_SIZE)))
-        self.posp.append((randint(20, 30) * GRID_SIZE,
-                          (randint(20, 22) * GRID_SIZE)))
+        for i in range(0, 100, 20):
+            self.posp.append((i * GRID_SIZE,
+                             10 * GRID_SIZE))
         return self.posp
 
     def draw(self, surface):
@@ -252,138 +252,97 @@ class Snake(GameObject):
         self.last = None
 
 
-def handle_keys(game_object: Snake) -> None:
-    """Function of processing of actions of the user.
+# def handle_keys(game_object: Snake) -> None:
+#     """Function of processing of actions of the user.
 
-    This method excludes the movement of a snake in itself.
-    """
-    key_builds: dict = {
-        (pygame.K_UP, RIGHT): UP,
-        (pygame.K_UP, LEFT): UP,
-        (pygame.K_RIGHT, UP): RIGHT,
-        (pygame.K_RIGHT, DOWN): RIGHT,
-        (pygame.K_DOWN, LEFT): DOWN,
-        (pygame.K_DOWN, RIGHT): DOWN,
-        (pygame.K_LEFT, UP): LEFT,
-        (pygame.K_LEFT, DOWN): LEFT
-    }
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            pygame.quit()
-            sys.exit()
-        elif event.type == pygame.KEYDOWN:
-            if (event.key, game_object.direction) in key_builds:
-                game_object.next_direction = key_builds[
-                    (event.key, game_object.direction)
-                ]
-            if event.key == pygame.K_ESCAPE:
-                pygame.quit()
-                sys.exit()
-
-
-def new_apple(snake: Snake, wall: Wall, portal: Portal) -> Apple:
-    """Function to create new apples."""
-    while True:
-        apple = Apple()
-        if (apple.position not in snake.positions) and (
-            apple.position not in wall.positions) and (
-                apple.position not in portal.positions):
-            break
-    return apple
+#     This method excludes the movement of a snake in itself.
+#     """
+#     key_builds: dict = {
+#         (pygame.K_UP, RIGHT): UP,
+#         (pygame.K_UP, LEFT): UP,
+#         (pygame.K_RIGHT, UP): RIGHT,
+#         (pygame.K_RIGHT, DOWN): RIGHT,
+#         (pygame.K_DOWN, LEFT): DOWN,
+#         (pygame.K_DOWN, RIGHT): DOWN,
+#         (pygame.K_LEFT, UP): LEFT,
+#         (pygame.K_LEFT, DOWN): LEFT
+#     }
+#     for event in pygame.event.get():
+#         if event.type == pygame.QUIT:
+#             pygame.quit()
+#             sys.exit()
+#         elif event.type == pygame.KEYDOWN:
+#             if (event.key, game_object.direction) in key_builds:
+#                 game_object.next_direction = key_builds[
+#                     (event.key, game_object.direction)
+#                 ]
+#             if event.key == pygame.K_ESCAPE:
+#                 pygame.quit()
+#                 sys.exit()
 
 
-def new_junk(snake: Snake, wall: Wall, portal: Portal, apple: Apple) -> Junk:
-    """Function to create new junk."""
-    while True:
-        junk = Junk()
-        if (junk.position not in snake.positions) and (
-            junk.position not in wall.positions) and (
-                junk.position not in portal.positions) and (
-                    junk.position not in apple.position):
-            break
-    return junk
+# def new_apple(snake: Snake, wall: Wall, portal: Portal) -> Apple:
+#     """Function to create new apples."""
+#     while True:
+#         apple = Apple()
+#         if (apple.position not in snake.positions) and (
+#             apple.position not in wall.positions) and (
+#                 apple.position not in portal.positions):
+#             break
+#     return apple
 
 
-def infinite_way(snake: Snake, portal: Portal) -> Snake:
-    """This function allows travel throw display's borders and portals."""
-    head_pos_x: int = snake.get_head_position()[0]
-    head_pos_y: int = snake.get_head_position()[1]
-    portal_1_pos_x: int = portal.positions[0][0]
-    portal_1_pos_y: int = portal.positions[0][1]
-    portal_2_pos_x: int = portal.positions[1][0]
-    portal_2_pos_y: int = portal.positions[1][1]
-    if head_pos_x == portal_1_pos_x and head_pos_y == portal_1_pos_y:
-        head_pos_x = portal_2_pos_x
-        head_pos_y = portal_2_pos_y
-    elif head_pos_x == portal_2_pos_x and head_pos_y == portal_2_pos_y:
-        head_pos_x = portal_1_pos_x
-        head_pos_y = portal_1_pos_y
+# def new_junk(snake: Snake, wall: Wall, portal: Portal, apple: Apple) -> Junk:
+#     """Function to create new junk."""
+#     while True:
+#         junk = Junk()
+#         if (junk.position not in snake.positions) and (
+#             junk.position not in wall.positions) and (
+#                 junk.position not in portal.positions) and (
+#                     junk.position not in apple.position):
+#             break
+#     return junk
 
-    if head_pos_x >= SCREEN_WIDTH:
-        head_pos_x = 0
-    elif head_pos_x < 0:
-        head_pos_x = SCREEN_WIDTH - GRID_SIZE
 
-    if head_pos_y >= SCREEN_HEIGHT:
-        head_pos_y = 0
-    elif head_pos_y < 0:
-        head_pos_y = SCREEN_HEIGHT - GRID_SIZE
+# def infinite_way(snake: Snake, portal: Portal) -> Snake:
+#     """This function allows travel throw display's borders and portals."""
+#     head_pos_x: int = snake.get_head_position()[0]
+#     head_pos_y: int = snake.get_head_position()[1]
+#     portal_1_pos_x: int = portal.positions[0][0]
+#     portal_1_pos_y: int = portal.positions[0][1]
+#     portal_2_pos_x: int = portal.positions[1][0]
+#     portal_2_pos_y: int = portal.positions[1][1]
+#     if head_pos_x == portal_1_pos_x and head_pos_y == portal_1_pos_y:
+#         head_pos_x = portal_2_pos_x
+#         head_pos_y = portal_2_pos_y
+#     elif head_pos_x == portal_2_pos_x and head_pos_y == portal_2_pos_y:
+#         head_pos_x = portal_1_pos_x
+#         head_pos_y = portal_1_pos_y
 
-    snake.positions[0] = (head_pos_x, head_pos_y)
-    return snake
+#     if head_pos_x >= SCREEN_WIDTH:
+#         head_pos_x = 0
+#     elif head_pos_x < 0:
+#         head_pos_x = SCREEN_WIDTH - GRID_SIZE
+
+#     if head_pos_y >= SCREEN_HEIGHT:
+#         head_pos_y = 0
+#     elif head_pos_y < 0:
+#         head_pos_y = SCREEN_HEIGHT - GRID_SIZE
+
+#     snake.positions[0] = (head_pos_x, head_pos_y)
+#     return snake
 
 
 def main():
     """Main function of game."""
-    snake = Snake()
-    wall = Wall()
-    portal = Portal()
-    apple = new_apple(snake, wall, portal)
-    junk = new_junk(snake, wall, portal, apple)
+    wall_first = WallFirst()
     speed = SPEED
-    while True:
-        clock.tick(speed)
 
-        handle_keys(snake)
-        snake.update_direction()
-        snake.move()
-        snake = infinite_way(snake, portal)
-        apple.draw(screen)
-        junk.draw(screen)
-        snake.draw(screen)
-        wall.draw(screen)
-        portal.draw(screen)
-        if snake.positions[0] == apple.position:
-            snake.positions.append(snake.last)
-            snake.last = None
-            apple = new_apple(snake, wall, portal)
-            snake.length += 1
-            speed += 0.5
+    clock.tick(speed)
 
-        if snake.positions[0] == junk.position:
-            snake.length -= 1
-            if snake.length < 1:
-                pygame.quit()
-                sys.exit()
-            rect = pygame.Rect(
-                (snake.positions[-1][0], snake.positions[-1][1]),
-                (GRID_SIZE, GRID_SIZE)
-            )
-            pygame.draw.rect(screen, COLOR_BLACK, rect)
-            snake.positions.pop(-1)
-            snake.last = snake.positions[-1]
-            speed -= 0.5
-            junk = new_junk(snake, wall, portal, apple)
+    wall_first.draw(screen)
 
-        if snake.positions[0] in snake.positions[1:]:
-            snake.reset(screen)
-            speed = SPEED
-
-        if snake.positions[0] in wall.positions:
-            snake.reset(screen)
-            speed = SPEED
-
-        pygame.display.update()
+    pygame.display.update()
 
 
 if __name__ == '__main__':
